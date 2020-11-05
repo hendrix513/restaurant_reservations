@@ -1,0 +1,30 @@
+version: '3.7'
+
+services:
+
+  reservations:
+    build: ./reservations
+    image: reservations
+    container_name: reservations
+    ports:
+      - 8000:8000
+    volumes:
+      - ./reservations:/usr/src/app
+    command: gunicorn -b 0.0.0.0:8000 'app:create_app()'
+    environment:
+      - REDIS_HOST=redis
+      - CELERY_BROKER=redis://redis:6379/0
+      - CELERY_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:5.0.3-alpine
+
+  test:
+    image: reservations
+    command: pytest tests.py -s
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - reservations
